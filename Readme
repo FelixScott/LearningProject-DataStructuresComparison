@@ -1,0 +1,7 @@
+This program contains 3 data structures:
+  * Hash table
+  * Linked list
+  * Binary tree
+It also contains a sample data csv file for them to read in data.
+The program facilitates the storage and fetching of data in these 3 data stuctures 
+and through the tracking option you can compare the speeds of data retrieval.
