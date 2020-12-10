@@ -45,15 +45,27 @@ class HashTable:
             Node = Node.NextNode
         PreviousNode.NextNode = HashTableNode(Key, Value)
 
-    def FindEntry(self, Key):
+    def FindEntry(self, Key, Tracked):
         Index = self.Hash(Key)
         Node = self.Buckets[Index]
-        while Node is not None and Node.Key != Key:
-            Node = Node.NextNode
+        if Tracked:
+            Tracker = 0
+            while Node is not None and Node.Key != Key:
+                Tracker += 1
+                Node = Node.NextNode
+            if Node is None:
+                return None
+            else:
+                print("Entry found in {} steps".format(Tracker))
+                return Node.Value
+        else:
+            while Node is not None and Node.Key != Key:
+                Node = Node.NextNode
             if Node is None:
                 return None
             else:
                 return Node.Value
+
 
     def RemoveEntry(self, Key):
         Index = self.Hash(Key)
@@ -87,11 +99,11 @@ class HashTable:
 
 
 class BinaryTreeNode:
-    def __init__(self, Value, Key, LowerNode, HigherNode):
+    def __init__(self, Value, Key):
         self.Value = Value
         self.Key = Key
-        self.HigherNode = HigherNode
-        self.LowerNode = LowerNode
+        self.HigherNode = None
+        self.LowerNode = None
         self.PreviousNode = None
         self.Collided = False
         self.CollidedNext = None
@@ -114,20 +126,20 @@ class BinaryTree:
         else:
             return 2
 
-    def Insert(self, Value, Key, LowerNode, HigherNode):
-        InsertNode = BinaryTreeNode(Value, Key, LowerNode, HigherNode)
+    def Insert(self, Value, Key):
+        InsertNode = BinaryTreeNode(Value, Key)
         ComparisonNode = None
         IsPlaced = False
         if self.Head is None:
             self.Head = InsertNode
-            IsPlaced = True
+            return
         else:
             ComparisonNode = self.Head
         while IsPlaced is False:
-            if self.NodeSort(InsertNode.Key, ComparisonNode.Key) == 0: # Nodes are equal
+            if self.NodeSort(InsertNode.Key, ComparisonNode.Key) == 0:  # Nodes are equal
                 self.TreeCollision(InsertNode, ComparisonNode)
                 IsPlaced = True
-            elif self.NodeSort(InsertNode.Key, ComparisonNode.Key) == 1: # ComparisonNode is Higher
+            elif self.NodeSort(InsertNode.Key, ComparisonNode.Key) == 1:  # ComparisonNode is Higher
                 if ComparisonNode.LowerNode is None:
                     ComparisonNode.LowerNode = InsertNode
                     InsertNode.PreviousNode = ComparisonNode
@@ -151,34 +163,71 @@ class BinaryTree:
         CurrentNode.CollidedNext = TargetNode
         TargetNode.CollidedPrevious = CurrentNode
 
-    def FindEntry(self, Key):
+    def FindEntry(self, Key, Tracked):
         ComparisonNode = self.Head
-        while Key != ComparisonNode.Key:
-            if self.NodeSort(Key, ComparisonNode.Key) == 1:
-                if ComparisonNode.LowerNode is None:
-                    print("Entry not in list")
-                    return
-                else:
-                    ComparisonNode = ComparisonNode.LowerNode
-            elif self.NodeSort(Key, ComparisonNode.Key) == 2:
-                if ComparisonNode.HigherNode is None:
-                    print("Entry not in list")
-                    return
-                else:
-                    ComparisonNode = ComparisonNode.HigherNode
-        if ComparisonNode.Collided:
-            print("Multiple entries under {} found:".format(Key))
-            i = 0
-            while ComparisonNode.CollidedNext is not None:
-                print("{}: {} ({})".format(i, ComparisonNode.Key, i))
-                i += 1
-            UserChoice = input("Please choose number from above list: ")
-            i = 0
-            while i < UserChoice:
-                ComparisonNode = ComparisonNode.CollidedNext
-            return ComparisonNode.Value
+        if Tracked:
+            Tracker = 0
+            while Key != ComparisonNode.Key:
+                if self.NodeSort(Key, ComparisonNode.Key) == 1:
+                    if ComparisonNode.LowerNode is None:
+                        Tracker += 1
+                        print("Entry not found in {} steps".format(Tracker))
+                        print("Entry not in list")
+                        return
+                    else:
+                        Tracker += 1
+                        ComparisonNode = ComparisonNode.LowerNode
+                elif self.NodeSort(Key, ComparisonNode.Key) == 2:
+                    if ComparisonNode.HigherNode is None:
+                        Tracker += 1
+                        print("Entry not found in {} steps".format(Tracker))
+                        print("Entry not in list")
+                        return
+                    else:
+                        Tracker += 1
+                        ComparisonNode = ComparisonNode.HigherNode
+            if ComparisonNode.Collided:
+                print("Entry found collided in {} steps".format(Tracker))
+                print("Multiple entries under {} found:".format(Key))
+                i = 0
+                while ComparisonNode.CollidedNext is not None:
+                    print("{}: {} ({})".format(i, ComparisonNode.Key, i))
+                    i += 1
+                UserChoice = input("Please choose number from above list: ")
+                i = 0
+                while i < UserChoice:
+                    ComparisonNode = ComparisonNode.CollidedNext
+                return ComparisonNode.Value
+            else:
+                print("Entry found uncollided in {} steps".format(Tracker))
+                return ComparisonNode.Value
         else:
-            return ComparisonNode.Value
+            while Key != ComparisonNode.Key:
+                if self.NodeSort(Key, ComparisonNode.Key) == 1:
+                    if ComparisonNode.LowerNode is None:
+                        print("Entry not in list")
+                        return
+                    else:
+                        ComparisonNode = ComparisonNode.LowerNode
+                elif self.NodeSort(Key, ComparisonNode.Key) == 2:
+                    if ComparisonNode.HigherNode is None:
+                        print("Entry not in list")
+                        return
+                    else:
+                        ComparisonNode = ComparisonNode.HigherNode
+            if ComparisonNode.Collided:
+                print("Multiple entries under {} found:".format(Key))
+                i = 0
+                while ComparisonNode.CollidedNext is not None:
+                    print("{}: {} ({})".format(i, ComparisonNode.Key, i))
+                    i += 1
+                UserChoice = input("Please choose number from above list: ")
+                i = 0
+                while i < UserChoice:
+                    ComparisonNode = ComparisonNode.CollidedNext
+                return ComparisonNode.Value
+            else:
+                return ComparisonNode.Value
 
     def RemoveEntry(self, Key):
         ComparisonNode = self.Head
@@ -253,7 +302,7 @@ class LinkedList:
             CurrentNode = CurrentNode.NextNode
         print(str(CurrentNode.Key))
 
-    def FindEntryFromKey(self, NodeKey, Tracked):
+    def FindEntry(self, NodeKey, Tracked):
         CurrentNode = self.Head
         if Tracked:
             Tracker = 0
@@ -273,8 +322,6 @@ class LinkedList:
                 return CurrentNode.Value
             else:
                 return 0
-
-
 
     def FindEntryFromPosition(self, NodePosition):
         CurrentNode = self.Head
@@ -305,97 +352,58 @@ class LinkedList:
             if CurrentNode.NextNode is not None:
                 CurrentNode.NextNode.PreviousNode = CurrentNode.PreviousNode
 
-class MenuController:
-    def __init__(self):
-        self.MenuList = []
-        self.CurrentMenu = None
-        self.PreviousMenu = None
-
 
 class Menu:
-    # A menu can have up to 5 options
-    def __init__(self,MenuController, MenuName, Name1, Function1, Name2, Function2, Name3, Function3, Name4, Function4,
-                Name5, Function5):
-        self.MenuController = MenuController
-        self.MenuName = MenuName
-        self.Names = []
-        self.Functions = []
-        self.Names.append(Name1)
-        self.Functions.append(Function1)
-        self.Names.append(Name2)
-        self.Functions.append(Function2)
-        self.Names.append(Name3)
-        self.Functions.append(Function3)
-        self.Names.append(Name4)
-        self.Functions.append(Function4)
-        self.Names.append(Name5)
-        self.Functions.append(Function5)
-        if self.MenuController.MainMenu is None:
-            self.MenuController.MainMenu = self
+    def __init__(self, PassedMenuName):
+        self.ReturnMenu = None
+        self.MenuOptions = []
+        self.MenuName = str(PassedMenuName)
 
-    def ForwardDisplayMenu(self):
-        # Displays options, asks for input, runs function selected
-        if self.MenuController.MainMenu == self:
-            self.MenuController.PreviousMenu = None
+    def InsertMenuOption(self, PassedName, PassedMenuReturn,  PassedFunction):
+        TempName = str(PassedName)
+        MenuReturn = PassedMenuReturn
+        TempFunction = PassedFunction
+        self.MenuOptions.append(TempName)
+        self.MenuOptions.append(MenuReturn)
+        self.MenuOptions.append(TempFunction)
+
+    def Display(self):
+        print("\n----------{}----------".format(self.MenuName))
+        i = 0
+        j = 1
+        while i < len(self.MenuOptions):
+            print("{}: {}".format(j, self.MenuOptions[i]))
+            i += 3
+            j += 1
+        if self.ReturnMenu is None:
+            print("{}: Exit Program".format(j))
         else:
-            self.MenuController.PreviousMenu = self.MenuController.CurrentMenu
-        self.MenuController.CurrentMenu = self
-        print("--------------{}--------------".format(self.MenuName))
-        CurrentName = 0
-        while CurrentName <= 4:
-            if self.Names[CurrentName] is not None:
-                print("{}: {}".format(CurrentName, self.Names[CurrentName]))
-            CurrentName += 1
-        if self.MenuController.PreviousMenu is None:
-            print("9: Quit Program")
-        else:
-            print("9: Previous Menu")
-        UserInput = input("Please select from above list: ")
-        if int(UserInput) == 9:
-            if self.MenuController.PreviousMenu is None:
+            print("{}: Back".format(j))
+        print("----------{}----------".format("-"*len(self.MenuName)))
+        print()
+        Selection = input("Please Choose from above options: ")
+        Selection = int(Selection)
+        if Selection == j:
+            if self.ReturnMenu is None:
+                print("Exiting Program...")
                 quit()
             else:
-                print(self.MenuController.PreviousMenu)
-                self.MenuController.CurrentMenu = None
-                self.MenuController.PreviousMenu.ReverseDisplayMenu()
-        self.Functions[int(UserInput)]()
-
-    def ReverseDisplayMenu(self):
-        
-        # Displays options, asks for input, runs function selected
-        if self.MenuController.MainMenu == self:
-            self.MenuController.PreviousMenu = None
+                self.ReturnMenu.Display()
         else:
-            self.MenuController.PreviousMenu = self.MenuController.CurrentMenu
-        self.MenuController.CurrentMenu = self
-        print("--------------{}--------------".format(self.MenuName))
-        CurrentName = 0
-        while CurrentName <= 4:
-            if self.Names[CurrentName] is not None:
-                print("{}: {}".format(CurrentName, self.Names[CurrentName]))
-            CurrentName += 1
-        if self.MenuController.PreviousMenu is None:
-            print("9: Quit Program")
-        else:
-            print("9: Previous Menu")
-        UserInput = input("Please select from above list: ")
-        if int(UserInput) == 9:
-            if self.MenuController.PreviousMenu is None:
-                quit()
+            Selection = (Selection * 3 - 1)
+            print()
+            if (self.MenuOptions[Selection-1]) is True:
+                self.MenuOptions[Selection]()
+                self.Display()
             else:
-                print(self.MenuController.PreviousMenu)
-                self.MenuController.CurrentMenu = None
-                self.MenuController.PreviousMenu.ReverseDisplayMenu()
-        self.Functions[int(UserInput)]()
-
-
+                self.MenuOptions[Selection]()
 
 
 def HashDataInput(FileKey, EmployeeHashTable, EmployeeUnlinkedList):
     import csv
     with open(FileKey, 'r') as csv_file:
         csv_reader = csv.reader(csv_file)
-        i = 0
+        i = 11
         for line in csv_reader:
             EmployeeHashTable.Insert(str(line[4]), i)
             EmployeeUnlinkedList.append(Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6]))
@@ -406,7 +414,7 @@ def LinkedListDataInput(FileKey, EmployeeLinkedList, EmployeeUnlinkedList):
     import csv
     with open(FileKey, 'r') as csv_file:
         csv_reader = csv.reader(csv_file)
-        i = 0
+        i = 1
         for line in csv_reader:
             EmployeeLinkedList.Insert(str(line[4]), i)
             EmployeeUnlinkedList.append(Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6]))
@@ -417,23 +425,23 @@ def BinaryTreeDataInput(FileKey, EmployeeBinaryTree, EmployeeUnlinkedList):
     import csv
     with open(FileKey, 'r') as csv_file:
         csv_reader = csv.reader(csv_file)
-        i = 0
+        i = 1
         for line in csv_reader:
-            EmployeeBinaryTree.Insert(str(line[4]), i)
+            EmployeeBinaryTree.Insert(i, str(line[4]))
             EmployeeUnlinkedList.append(Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6]))
             i += 1
 
 
 def TakeFetchRequest():
     RequestedData = 0
-    LastName = input("Please enter the last name of the employee you wish to find: ")
+    LastName = input("\nPlease enter the last name of the employee you wish to find: ")
     print("1: ID")
     print("2: FirstName")
     print("3: Middle Initial")
     print("4: Last Name")
     print("5: Gender")
     print("6: Email")
-    RequestedData = int(input("Please enter the number corresponding to the data you wish to find: "))
+    RequestedData = int(input("\nPlease enter the number corresponding to the data you wish to find: "))
     while not 0 < RequestedData < 7:
         RequestedData = int(input("Error - Value not in list please try again"))
     return LastName, RequestedData
@@ -448,12 +456,30 @@ def PrintRequestedData(UnlinkedList, RequestedData, DataIndex):
         5: UnlinkedList[DataIndex].Gender,
         6: UnlinkedList[DataIndex].Email
     }
-    print(switcher[RequestedData])
+    print("\n   ",switcher[RequestedData],"\n")
 
 
-def LinkedListFindRecord(UnlinkedList, LinkedList, Tracked):
+def LinkedListFindRecord(UnlinkedList, fLinkedList, Tracked):
     Key, RequestedData = TakeFetchRequest()
-    Index = LinkedList.FindEntryFromKey(Key, Tracked)
+    Index = fLinkedList.FindEntry(Key, Tracked)
+    if Index == 0:
+        print ("Item not in list please try again")
+    else:
+        PrintRequestedData(UnlinkedList, RequestedData, Index)
+
+
+def BinaryTreeFindRecord(UnlinkedList, fBinaryTree, Tracked):
+    Key, RequestedData = TakeFetchRequest()
+    Index = fBinaryTree.FindEntry(Key, Tracked)
+    if Index == 0:
+        print ("Item not in list please try again")
+    else:
+        PrintRequestedData(UnlinkedList, RequestedData, Index)
+
+
+def HashTableFindRecord(UnlinkedList, fHashTable, Tracked):
+    Key, RequestedData = TakeFetchRequest()
+    Index = fHashTable.FindEntry(Key, Tracked)
     if Index == 0:
         print ("Item not in list please try again")
     else:
@@ -461,20 +487,93 @@ def LinkedListFindRecord(UnlinkedList, LinkedList, Tracked):
 
 
 # Menu Functions
-def MenuLinkedListDataInput():
+def MenuLinkedListImport():
+    print("---Importing linked list---")
     LinkedListDataInput(FileName, DataLinkedList, DataUnlinkedList)
-    print("Data input complete, returning to menu...")
-    ProgramMenuController.PreviousMenu.DisplayMenu()
+    print("---Imported linked list---")
 
 
-def MenuLinkedListFindRecordUntracked():
-    LinkedListFindRecord(DataUnlinkedList, DataLinkedList, False)
-    ProgramMenuController.PreviousMenu.DisplayMenu()
+def MenuLinkedListDisplay():
+    print("---Displaying linked list---")
+    DataLinkedList.PrintLinkedList()
+    print("---Displayed linked list---")
 
 
-def MenuLinkedListFindRecordTracked():
+def MenuLinkedListFindEntryTracked():
+    print("---Find entry tracked---")
     LinkedListFindRecord(DataUnlinkedList, DataLinkedList, True)
-    ProgramMenuController.PreviousMenu.DisplayMenu()
+    print("---Found entry tracked---")
+
+
+def MenuLinkedListFindEntryUntracked():
+    print("---Find entry untracked---")
+    LinkedListFindRecord(DataUnlinkedList, DataLinkedList, False)
+    print("---Found entry untracked---")
+
+
+def MenuBinaryTreeImport():
+    print("---Import binary tree---")
+    BinaryTreeDataInput(FileName, DataBinaryTree, DataUnlinkedList)
+    print("---Imported binary tree---")
+
+
+def MenuBinaryTreeFindEntryTracked():
+    print("---Find entry tracked---")
+    BinaryTreeFindRecord(DataUnlinkedList, DataBinaryTree, True)
+    print("---Found entry tracked---")
+
+
+def MenuBinaryTreeFindEntryUntracked():
+    print("---Find entry untracked---")
+    BinaryTreeFindRecord(DataUnlinkedList, DataBinaryTree, False)
+    print("---Found entry untracked---")
+
+
+def MenuHashTableImport():
+    print("---Import hash table---")
+    HashDataInput(FileName, DataHashTable, DataUnlinkedList)
+    print("---Imported hash table---")
+
+
+def MenuHashTableFindEntryTracked():
+    print("---Find entry tracked---")
+    HashTableFindRecord(DataUnlinkedList, DataHashTable, True)
+    print("--- Found entry Tracked---")
+
+
+def MenuHashTableFindEntryUntracked():
+    print("---Find entry untracked---")
+    HashTableFindRecord(DataUnlinkedList, DataHashTable, False)
+    print("---Found entry untracked")
+
+
+# Menu declarations
+MainMenu = Menu("MAIN MENU")
+LinkedListOptions = Menu("Linked list options")
+LinkedListOptions.ReturnMenu = MainMenu
+BinaryTreeOptions = Menu("Binary tree options")
+BinaryTreeOptions.ReturnMenu = MainMenu
+HashTableOptions = Menu("Hash table options")
+HashTableOptions.ReturnMenu = MainMenu
+
+# Menu option declarations
+MainMenu.InsertMenuOption("Linked list options", False, LinkedListOptions.Display)
+MainMenu.InsertMenuOption("Binary tree options", False, BinaryTreeOptions.Display)
+MainMenu.InsertMenuOption("Hash table options", False, HashTableOptions.Display)
+
+LinkedListOptions.InsertMenuOption("Import data to linked list", True, MenuLinkedListImport)
+LinkedListOptions.InsertMenuOption("Display linked list", True, MenuLinkedListDisplay)
+LinkedListOptions.InsertMenuOption("Find entry tracked", True, MenuLinkedListFindEntryTracked)
+LinkedListOptions.InsertMenuOption("Find entry untracked", True, MenuLinkedListFindEntryUntracked)
+
+BinaryTreeOptions.InsertMenuOption("Import data to binary tree", True, MenuBinaryTreeImport)
+BinaryTreeOptions.InsertMenuOption("Find entry tracked", True, MenuBinaryTreeFindEntryTracked)
+BinaryTreeOptions.InsertMenuOption("Find entry untracked", True, MenuBinaryTreeFindEntryUntracked)
+
+HashTableOptions.InsertMenuOption("Import data to hash table", True, MenuHashTableImport)
+HashTableOptions.InsertMenuOption("Find entry tracked", True, MenuHashTableFindEntryTracked)
+HashTableOptions.InsertMenuOption("Find entry untracked", True, MenuHashTableFindEntryUntracked)
+
 
 
 # Global variable declaration
@@ -484,14 +583,13 @@ HashTableCapacity = 1000
 DataLinkedList = LinkedList()
 DataBinaryTree = BinaryTree()
 DataHashTable = HashTable(HashTableCapacity)
-MainMenu = None
-LinkedListOptions = None
-ReturnMenu = None
-ProgramMenuController = MenuController()
 
-LinkedListOptions = Menu(ProgramMenuController, "Linked List Options", "Import employee records", MenuLinkedListDataInput, "Find Record", MenuLinkedListFindRecordUntracked, "Find Record (Tracked)", MenuLinkedListFindRecordTracked, None, None, None, None)
-MainMenu = Menu(ProgramMenuController, "Main Menu", "LinkedListOptions", LinkedListOptions.DisplayMenu, "BinaryTreeOptions", None, "HashTableOptions", None, None, None, "Exit Program", quit)
-MainMenu.DisplayMenu()
+# Startup
+MenuLinkedListImport()
+MenuBinaryTreeImport()
+MenuHashTableImport()
+MainMenu.Display()
+
 
 
 
